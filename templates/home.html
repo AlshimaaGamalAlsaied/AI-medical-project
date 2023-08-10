@@ -88,14 +88,24 @@
     outputSquare.style.background = '#f0f0f0';
   });
 
+  
   startButton.addEventListener('click', function() {
-    // Simulate processing and update the output image and text
-    // For demonstration purposes, you can replace this with actual processing logic
-    outputImage.src = 'path_to_output_image.jpg'; // Update with actual output image URL
-    outputImage.style.display = 'block';
-    outputSquare.style.background = 'none';
-    outputText.value = 'Result information goes here...'; // Update with actual result information
-  });
+    const inputImageFilename = inputImage.src.split('/').pop();
+    console.log("Input Image Filename:", inputImageFilename);
+    
+    fetch(`/process_image/${encodeURIComponent(inputImageFilename)}`)
+      .then(response => response.json())
+      .then(data => {
+        console.log("Output Image Data:", data);
+        outputImage.src = data.output_image;
+        outputImage.style.display = 'block';
+        outputSquare.style.background = 'none';
+        outputText.value = data.result_info;
+      });
+});
+
+
 </script>
 </body>
 </html>
+
