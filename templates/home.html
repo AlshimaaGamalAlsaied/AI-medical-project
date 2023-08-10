@@ -1,38 +1,101 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Medical AI Project</title>
-    <style>
-        body {
-            
-            text-align: center;
-        }
-        .container {
-            margin-top: 50px;
-        }
-        .image-display {
-            width: 300px;
-            height: 300px;
-            border: 1px solid black;
-            margin: 0 auto;
-            background-color: white;
-        }
-    </style>
+<style>
+  .container {
+    text-align: center;
+    margin-top: 50px;
+  }
+
+  .image-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+  }
+
+  .image-square {
+    width: 300px;
+    height: 300px;
+    border: 2px solid #000;
+    margin: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #f0f0f0;
+  }
+
+  .output-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+  }
+
+  #output-text {
+    width: 40%;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    resize: none;
+    height: 100px;
+    font-size: 12px;
+    text-align: center;
+    padding: 5px;
+    box-sizing: border-box;
+  }
+
+  #start-button {
+    font-size: 18px;
+    padding: 10px 20px;
+    margin-top: 20px;
+    margin-bottom: 10px;
+  }
+</style>
 </head>
 <body>
-    <div class="container">
-        
-        <form action="/upload" method="post" enctype="multipart/form-data">
-            <input type="file" name="file" accept=".jpg, .jpeg, .png"><br>
-            <input type="submit" value="Upload">
-        </form>
-        <div class="image-display" id="input-image"></div>
-        <button id="start-model">Start Model</button>
-        <div class="image-display" id="output-image"></div>
-        <p id="diagnosis"></p>
-        <button id="chatbot-icon"><img src="chatbot-icon.png" alt="Chatbot"></button>
+<div class="container">
+  <input type="file" id="image-input" accept="image/*">
+  <br>
+  <div class="image-container">
+    <div class="image-square" id="input-square">
+      <img id="input-image" src="#" alt="Input Image" style="max-width:100%; max-height:100%; display: none;">
     </div>
+    <div class="image-square" id="output-square">
+      <img id="output-image" src="#" alt="Output Image" style="max-width:100%; max-height:100%; display: none;">
+    </div>
+  </div>
+  <div class="output-container">
+    <button id="start-button">Start</button>
+    <textarea id="output-text" placeholder="Result Information" rows="4"></textarea>
+  </div>
+</div>
+
+<script>
+  const imageInput = document.getElementById('image-input');
+  const inputImage = document.getElementById('input-image');
+  const outputImage = document.getElementById('output-image');
+  const inputSquare = document.getElementById('input-square');
+  const outputSquare = document.getElementById('output-square');
+  const startButton = document.getElementById('start-button');
+  const outputText = document.getElementById('output-text');
+
+  imageInput.addEventListener('change', function(event) {
+    const selectedImage = event.target.files[0];
+    inputImage.src = URL.createObjectURL(selectedImage);
+    inputImage.style.display = 'block';
+    inputSquare.style.background = 'none';
+    outputImage.style.display = 'none';
+    outputSquare.style.background = '#f0f0f0';
+  });
+
+  startButton.addEventListener('click', function() {
+    // Simulate processing and update the output image and text
+    // For demonstration purposes, you can replace this with actual processing logic
+    outputImage.src = 'path_to_output_image.jpg'; // Update with actual output image URL
+    outputImage.style.display = 'block';
+    outputSquare.style.background = 'none';
+    outputText.value = 'Result information goes here...'; // Update with actual result information
+  });
+</script>
 </body>
 </html>
