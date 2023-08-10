@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical AI Project</title>
+    <style>
+        body {
+            background-color: rgb(115, 204, 242);
+            text-align: center;
+        }
+        .container {
+            margin-top: 50px;
+        }
+        .image-display {
+            width: 300px;
+            height: 300px;
+            border: 1px solid black;
+            margin: 0 auto;
+            background-color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Medical AI Project</h1>
+        <form action="/upload" method="post" enctype="multipart/form-data">
+            <input type="file" name="file" accept=".jpg, .jpeg, .png"><br>
+            <input type="submit" value="Upload">
+        </form>
+        <div class="image-display" id="input-image"></div>
+        <button id="start-model">Start Model</button>
+        <div class="image-display" id="output-image"></div>
+        <p id="diagnosis"></p>
+        <button id="chatbot-icon"><img src="chatbot-icon.png" alt="Chatbot"></button>
+    </div>
+</body>
+</html>
