@@ -20,7 +20,7 @@ from public_tests import *
 path = "./"
 model = load_C3M3_model(path)
 
-IMAGE_DIR = 'data/nih_new/images-small/'
+# IMAGE_DIR = 'data/nih_new/images-small/'
 # df = pd.read_csv('data/nih_new/train-small.csv')
 # im_path = IMAGE_DIR + '00025288_001.png' 
 # x = load_image(im_path, df, preprocess=False)
@@ -33,8 +33,8 @@ IMAGE_DIR = 'data/nih_new/images-small/'
 
 def process_image(input_filename):
     # Construct the full path to the input image in the dataset directory
-    input_image_path = os.path.join(IMAGE_DIR, input_filename)
+    # input_image_path = os.path.join(IMAGE_DIR, input_filename)
     
     # Simulated processing logic: Just returning the input image path
-    return input_image_path
+    return input_filename
 
