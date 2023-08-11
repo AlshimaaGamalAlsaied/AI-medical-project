@@ -21,9 +21,9 @@ path = "./"
 model = load_C3M3_model(path)
 
 IMAGE_DIR = 'data/nih_new/images-small/'
-df = pd.read_csv('data/nih_new/train-small.csv')
-im_path = IMAGE_DIR + '00025288_001.png' 
-x = load_image(im_path, df, preprocess=False)
+# df = pd.read_csv('data/nih_new/train-small.csv')
+# im_path = IMAGE_DIR + '00025288_001.png' 
+# x = load_image(im_path, df, preprocess=False)
 # plt.imshow(x, cmap = 'gray')
 # plt.show()
 
