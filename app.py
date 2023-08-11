@@ -35,7 +35,7 @@ def home():
             
             return render_template('home.html', output_image=output_filename)
     
-    return render_template('home.html', output_image=output_filename)
+    return render_template('home.html', output_image=None)
 
 @app.route('/process_image/<input_filename>')
 def process_image_route(input_filename):
