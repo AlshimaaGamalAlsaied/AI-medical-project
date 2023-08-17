@@ -1,111 +1,46 @@
 <!DOCTYPE html>
 <html>
 <head>
-<style>
-  .container {
-    text-align: center;
-    margin-top: 50px;
-  }
-
-  .image-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-top: 20px;
-  }
-
-  .image-square {
-    width: 300px;
-    height: 300px;
-    border: 2px solid #000;
-    margin: 20px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: #f0f0f0;
-  }
-
-  .output-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-top: 20px;
-  }
-
-  #output-text {
-    width: 40%;
-    margin-top: 10px;
-    margin-bottom: 10px;
-    resize: none;
-    height: 100px;
-    font-size: 12px;
-    text-align: center;
-    padding: 5px;
-    box-sizing: border-box;
-  }
-
-  #start-button {
-    font-size: 18px;
-    padding: 10px 20px;
-    margin-top: 20px;
-    margin-bottom: 10px;
-  }
-</style>
+    <title>Grad-CAM Visualization</title>
 </head>
 <body>
-<div class="container">
-  <input type="file" id="image-input" accept="image/*">
-  <br>
-  <div class="image-container">
-    <div class="image-square" id="input-square">
-      <img id="input-image" src="#" alt="Input Image" style="max-width:100%; max-height:100%; display: none;">
+    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh;">
+        <h1>Grad-CAM Visualization</h1>
+        <form action="/process" method="POST" enctype="multipart/form-data">
+            <input type="file" name="image" accept=".png, .jpg, .jpeg">
+            <button type="submit">Visualize</button>
+        </form>
+        <br>
+        <div style="display: flex; justify-content: space-between; width: 800px;">
+            <div>
+                <h2>Input Image</h2>
+                <img id="inputImage" src="#" alt="Input" style="max-width: 300px; max-height: 300px;">
+            </div>
+            <div>
+                <h2>Output Images</h2>
+                <div style="display: flex;">
+                    <img id="outputImage1" src="#" alt="Output 1" style="max-width: 150px; max-height: 150px;">
+                    <img id="outputImage2" src="#" alt="Output 2" style="max-width: 150px; max-height: 150px;">
+                    <img id="outputImage3" src="#" alt="Output 3" style="max-width: 150px; max-height: 150px;">
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="image-square" id="output-square">
-      <img id="output-image" src="#" alt="Output Image" style="max-width:100%; max-height:100%; display: none;">
-    </div>
-  </div>
-  <div class="output-container">
-    <button id="start-button">Start</button>
-    <textarea id="output-text" placeholder="Result Information" rows="4"></textarea>
-  </div>
-</div>
 
-<script>
-  const imageInput = document.getElementById('image-input');
-  const inputImage = document.getElementById('input-image');
-  const outputImage = document.getElementById('output-image');
-  const inputSquare = document.getElementById('input-square');
-  const outputSquare = document.getElementById('output-square');
-  const startButton = document.getElementById('start-button');
-  const outputText = document.getElementById('output-text');
+    <script>
+        function readURL(input, imageId) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    $('#' + imageId).attr('src', e.target.result);
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
 
-  imageInput.addEventListener('change', function(event) {
-    const selectedImage = event.target.files[0];
-    inputImage.src = URL.createObjectURL(selectedImage);
-    inputImage.style.display = 'block';
-    inputSquare.style.background = 'none';
-    outputImage.style.display = 'none';
-    outputSquare.style.background = '#f0f0f0';
-  });
-
-  
-  startButton.addEventListener('click', function() {
-    const inputImageFilename = inputImage.src.split('/').pop();
-    console.log("Input Image Filename:", inputImageFilename);
-    
-    fetch(`/process_image/${encodeURIComponent(inputImageFilename)}`)
-      .then(response => response.json())
-      .then(data => {
-        console.log("Output Image Data:", data);
-        outputImage.src = data.output_image;
-        outputImage.style.display = 'block';
-        outputSquare.style.background = 'none';
-        outputText.value = data.result_info;
-      });
-});
-
-
-</script>
+        $("#image").change(function () {
+            readURL(this, 'inputImage');
+        });
+    </script>
 </body>
 </html>
-

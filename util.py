@@ -125,6 +125,6 @@ def load_C3M3_model(path):
     model.compile(optimizer='adam', loss=get_weighted_loss(neg_weights, pos_weights))
     print("Compiled Model")
 
-    model.load_weights(path + "data/nih_new/pretrained_model.h5")
+    model.load_weights(path + "/data/nih_new/pretrained_model.h5")
     print("Loaded Weights")
     return model
