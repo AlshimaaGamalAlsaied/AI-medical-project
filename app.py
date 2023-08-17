@@ -22,64 +22,33 @@
 
 #     return cam
 
-import os
+import streamlit as st
 from keras.preprocessing import image
-import keras
 from keras import backend as K
-import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import cv2
-import sklearn
-import lifelines
 import tensorflow as tf
-tf.compat.v1.disable_eager_execution()
-
+from tempfile import NamedTemporaryFile
 from util import load_C3M3_model
 
+# Disable eager execution
+tf.compat.v1.disable_eager_execution()
+np.random.seed(0)
 
+# Load the model
+model_path = "./"  # Update with the actual path
+model = load_C3M3_model(model_path)
 
-
-# This sets a common size for all the figures we will draw.
-plt.rcParams['figure.figsize'] = [10, 7]
-path = "./"
-IMAGE_DIR = 'data/nih_new/images-small/'
-df = pd.read_csv('data/nih_new/train-small.csv')
-model = load_C3M3_model(path)
- 
-
+# Load labels
 labels = ['Cardiomegaly', 'Emphysema', 'Effusion', 'Hernia', 'Infiltration', 'Mass', 'Nodule', 'Atelectasis',
-              'Pneumothorax', 'Pleural_Thickening', 'Pneumonia', 'Fibrosis', 'Edema', 'Consolidation']
-labels_to_show = ['Cardiomegaly', 'Mass', 'Edema']
+          'Pneumothorax', 'Pleural_Thickening', 'Pneumonia', 'Fibrosis', 'Edema', 'Consolidation']
 
+# Load CSV data
+data_dir = 'data/nih_new/images-small/'  # Update with the actual path
+df = pd.read_csv('data/nih_new/train-small.csv')
 
-def get_mean_std_per_batch(IMAGE_DIR, df, H=320, W=320):
-    sample_data = []
-    for idx, img in enumerate(df.sample(100)["Image"].values):
-        path = IMAGE_DIR + img
-        sample_data.append(np.array(image.load_img(path, target_size=(H, W))))
-
-    mean = np.mean(sample_data[0])
-    std = np.std(sample_data[0])
-    return mean, std    
-
-def load_image_normalize(path, mean, std, H=320, W=320):
-    x = image.load_img(path, target_size=(H, W))
-    x -= mean
-    x /= std
-    x = np.expand_dims(x, axis=0)
-    return x
-
-def load_image(path, df, preprocess=True, H = 320, W = 320):
-    """Load and preprocess image."""
-    x = image.load_img(path, target_size=(H, W))
-    if preprocess:
-        mean, std = get_mean_std_per_batch(df, H=H, W=W)
-        x -= mean
-        x /= std
-        x = np.expand_dims(x, axis=0)
-    return x
-
+# Helper function to compute Grad-CAM
 def grad_cam(input_model, image, category_index, layer_name):
 
     cam = None
@@ -104,32 +73,94 @@ def grad_cam(input_model, image, category_index, layer_name):
 
     return cam
 
+# Helper function to load and preprocess image
+def get_mean_std_per_batch(IMAGE_DIR, df, H=320, W=320):
+    sample_data = []
+    for idx, img in enumerate(df.sample(100)["Image"].values):
+        path = IMAGE_DIR + img
+        sample_data.append(np.array(image.load_img(path, target_size=(H, W))))
 
-def compute_gradcam(model, img, mean, std, data_dir, df,
-                    labels, selected_labels, layer_name='conv5_block16_concat'):
-    img_path = data_dir + img
-    preprocessed_input = load_image_normalize(img_path, mean, std)
-    predictions = model.predict(preprocessed_input)
-    print(predictions[0][:])
+    mean = np.mean(sample_data[0])
+    std = np.std(sample_data[0])
+    return mean, std    
 
-    highest_prob_label_index = np.argmax(predictions)
-    highest_prob_label = labels[highest_prob_label_index]
+def load_image_normalize(path, mean, std, H=320, W=320):
+    x = image.img_to_array(image.load_img(path, target_size=(H, W)))
+    x -= mean
+    x /= std
+    x = np.expand_dims(x, axis=0)
+    return x
 
-    plt.figure(figsize=(15, 5))
-    plt.subplot(121)
-    plt.title("Original")
-    plt.axis('off')
-    plt.imshow(load_image(img_path, df, preprocess=False), cmap='gray')
+def load_image(path, df, preprocess=True, H=320, W=320):
+    """Load and preprocess image."""
+    x = image.img_to_array(image.load_img(path, target_size=(H, W)))
+    if preprocess:
+        mean, std = get_mean_std_per_batch(data_dir, df, H=H, W=W)
+        x -= mean
+        x /= std
+        x = np.expand_dims(x, axis=0)
+    return x
+# Streamlit GUI
+def main():
+    st.title("Grad-CAM Visualization")
 
-    gradcam = grad_cam(model, preprocessed_input, highest_prob_label_index, layer_name)
+    # Choose File and Start Prediction columns
+    col_choose, col_start = st.columns(2)
 
-    plt.subplot(122)
-    plt.title(highest_prob_label + ": " + str(round(predictions[0][highest_prob_label_index], 3)))
-    plt.axis('off')
-    plt.imshow(load_image(img_path, df, preprocess=False), cmap='gray')
-    plt.imshow(gradcam, cmap='magma', alpha=min(0.5, predictions[0][highest_prob_label_index]))
+    # Display the "Choose File" button
+    uploaded_file = col_choose.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
 
+    # Display the "Start" button
+    start_prediction = col_start.button("Start Prediction")
 
+    if uploaded_file is not None:
+        # Display the chosen image
+        st.image(uploaded_file, caption='Uploaded Image', use_column_width=True)
+
+        if start_prediction:
+            # Save the uploaded file as a temporary file
+            with NamedTemporaryFile(delete=False) as temp_file:
+                temp_file.write(uploaded_file.read())
+                temp_path = temp_file.name
+
+            # Preprocess the uploaded image
+            img = image.load_img(temp_path, target_size=(320, 320))
             
-image_name = '00000003_001.png'
-compute_gradcam(model, image_name, mean, std, IMAGE_DIR, df, labels, labels_to_show)
+            # Display the input image
+            col_input, col_output = st.columns(2)
+            with col_input:
+                st.image(img, caption='Input Image', use_column_width=True)
+
+            mean, std = get_mean_std_per_batch(data_dir, df)
+            preprocessed_input = load_image_normalize(temp_path, mean, std)
+
+            # Predict using the model
+            predictions = model.predict(preprocessed_input)
+            highest_prob_label_index = np.argmax(predictions)
+            highest_prob_label = labels[highest_prob_label_index]
+
+            # Compute and display Grad-CAM
+            gradcam = grad_cam(model, preprocessed_input, highest_prob_label_index, 'conv5_block16_concat')
+            gradcam = cv2.resize(gradcam, (320, 320), cv2.INTER_LINEAR)
+            heatmap = cv2.applyColorMap(np.uint8(255 * gradcam), cv2.COLORMAP_JET)
+
+            # Convert heatmap and superimposed_img to the same data type
+            heatmap = heatmap.astype(np.float32) / 255.0
+            img_array = image.img_to_array(img)
+            superimposed_img = cv2.cvtColor(np.array(img_array), cv2.COLOR_RGB2BGR)
+            superimposed_img = superimposed_img.astype(np.float32) / 255.0
+
+            alpha = 0.6
+            beta = 0.4
+            gamma = 0.0
+
+            # Combine the images
+            combined_img = cv2.addWeighted(superimposed_img, alpha, heatmap, beta, gamma)
+
+            # Display the Grad-CAM Heatmap
+            with col_output:
+                st.image(combined_img, caption='Grad-CAM Heatmap', use_column_width=True)
+                st.write(f"Diagnosis: {highest_prob_label} with a percentage of {round(predictions[0][highest_prob_label_index] * 100, 2)}%")
+
+if __name__ == "__main__":
+    main()
