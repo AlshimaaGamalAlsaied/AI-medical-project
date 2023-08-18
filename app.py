@@ -22,6 +22,8 @@
 
 #     return cam
 
+
+
 import streamlit as st
 from keras.preprocessing import image
 from keras import backend as K
@@ -100,69 +102,64 @@ def load_image(path, df, preprocess=True, H=320, W=320):
         x /= std
         x = np.expand_dims(x, axis=0)
     return x
+
 # Streamlit GUI
 def main():
     st.title("Grad-CAM Visualization")
 
-    # Choose File and Start Prediction columns
-    col_choose, col_start = st.columns(2)
-
     # Display the "Choose File" button
-    uploaded_file = col_choose.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
-
-    # Display the "Start" button
-    start_prediction = col_start.button("Start Prediction")
+    uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
+    # Create a layout with two columns
+    col1, col2 = st.columns([1, 1])
+    # Display the "Start" button in the second column
+    with col2:
+        start_prediction = st.button("Start Prediction")
 
     if uploaded_file is not None:
-        # Display the chosen image
-        st.image(uploaded_file, caption='Uploaded Image', use_column_width=True)
+        # Save the uploaded file as a temporary file
+        with NamedTemporaryFile(delete=False) as temp_file:
+            temp_file.write(uploaded_file.read())
+            temp_path = temp_file.name
 
-        if start_prediction:
-            # Save the uploaded file as a temporary file
-            with NamedTemporaryFile(delete=False) as temp_file:
-                temp_file.write(uploaded_file.read())
-                temp_path = temp_file.name
+        # Preprocess the uploaded image
+        img = image.load_img(temp_path, target_size=(320, 320))
+        img_array = image.img_to_array(img)
 
-            # Preprocess the uploaded image
-            img = image.load_img(temp_path, target_size=(320, 320))
-            
-            # Display the input image
-            col_input, col_output = st.columns(2)
-            with col_input:
-                st.image(img, caption='Input Image', use_column_width=True)
+        mean, std = get_mean_std_per_batch(data_dir, df)
+        preprocessed_input = load_image_normalize(temp_path, mean, std)
 
-            mean, std = get_mean_std_per_batch(data_dir, df)
-            preprocessed_input = load_image_normalize(temp_path, mean, std)
+        # Display the input and output images side by side
+        col_input, col_output = st.columns(2)
+        with col_input:
+            st.image(img, caption='Input Image', use_column_width=True)
+        with col_output:
+            if start_prediction:
+                # Predict using the model
+                predictions = model.predict(preprocessed_input)
+                highest_prob_label_index = np.argmax(predictions)
+                highest_prob_label = labels[highest_prob_label_index]
 
-            # Predict using the model
-            predictions = model.predict(preprocessed_input)
-            highest_prob_label_index = np.argmax(predictions)
-            highest_prob_label = labels[highest_prob_label_index]
+                # Compute and display Grad-CAM
+                gradcam = grad_cam(model, preprocessed_input, highest_prob_label_index, 'conv5_block16_concat')
+                gradcam = cv2.resize(gradcam, (320, 320), cv2.INTER_LINEAR)
+                # Apply the heatmap as an overlay on the original image
+                heatmap = cv2.applyColorMap(np.uint8(255 * gradcam), cv2.COLORMAP_JET)[..., ::-1]
+                heatmap = heatmap.astype(np.float32) / 255.0
 
-            # Compute and display Grad-CAM
-            gradcam = grad_cam(model, preprocessed_input, highest_prob_label_index, 'conv5_block16_concat')
-            gradcam = cv2.resize(gradcam, (320, 320), cv2.INTER_LINEAR)
-            heatmap = cv2.applyColorMap(np.uint8(255 * gradcam), cv2.COLORMAP_JET)
+                # Apply a mask to limit the heatmap to the detected regions
+                heatmap[heatmap < 0.2] = 0  # Set low values to 0 to ignore them
+                heatmap = heatmap / np.max(heatmap)  # Normalize heatmap values
 
-            # Convert heatmap and superimposed_img to the same data type
-            heatmap = heatmap.astype(np.float32) / 255.0
-            img_array = image.img_to_array(img)
-            superimposed_img = cv2.cvtColor(np.array(img_array), cv2.COLOR_RGB2BGR)
-            superimposed_img = superimposed_img.astype(np.float32) / 255.0
+                # Blend the heatmap with the original image
+                masked_img = (img_array / 255.0) * 0.8 + (heatmap * 0.4)  # Adjust alpha and beta values as needed
 
-            alpha = 0.6
-            beta = 0.4
-            gamma = 0.0
+                # Ensure pixel values are within [0.0, 1.0] range
+                masked_img = np.clip(masked_img, 0.0, 1.0)
 
-            # Combine the images
-            combined_img = cv2.addWeighted(superimposed_img, alpha, heatmap, beta, gamma)
-
-            # Display the Grad-CAM Heatmap
-            with col_output:
-                st.image(combined_img, caption='Grad-CAM Heatmap', use_column_width=True)
+                # Display the output image and text
+                st.image(masked_img, caption='Grad-CAM Heatmap', use_column_width=True)
                 st.write(f"Diagnosis: {highest_prob_label} with a percentage of {round(predictions[0][highest_prob_label_index] * 100, 2)}%")
+
 
 if __name__ == "__main__":
     main()
-
-    
