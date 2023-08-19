@@ -23,7 +23,8 @@
 #     return cam
 
 
-
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import streamlit as st
 from keras.preprocessing import image
 from keras import backend as K
