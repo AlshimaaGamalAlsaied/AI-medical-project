@@ -37,6 +37,7 @@ from util import load_C3M3_model
 
 # Disable eager execution
 tf.compat.v1.disable_eager_execution()
+tf.get_logger().setLevel('ERROR')
 np.random.seed(0)
 
 # Load the model
