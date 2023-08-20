@@ -107,7 +107,23 @@ def load_image(path, df, preprocess=True, H=320, W=320):
 
 # Streamlit GUI
 def main():
-    st.title("Grad-CAM Visualization")
+    
+    st.markdown(
+        """
+        <style>
+        .stApp {
+            background-color: #cfeaf3; /* Light blue background */
+            display: flex;
+            align-items: center; /* Vertically center-align */
+            justify-content: center; /* Horizontally center-align */
+            min-height: 100vh; /* Set the minimum height to full viewport height */
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+    st.markdown("<h1 style='text-align: center; color: #035169;'>AI for Medical Diagnosis</h1>", unsafe_allow_html=True)
+    #st.title("AI for Medical Diagnosis")
 
     # Display the "Choose File" button
     uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
@@ -115,7 +131,7 @@ def main():
     col1, col2 = st.columns([1, 1])
     # Display the "Start" button in the second column
     with col2:
-        start_prediction = st.button("Start Prediction")
+        start_prediction = st.button("Start")
 
     if uploaded_file is not None:
         # Save the uploaded file as a temporary file
@@ -160,7 +176,7 @@ def main():
 
                 # Display the output image and text
                 st.image(masked_img, caption='Grad-CAM Heatmap', use_column_width=True)
-                st.write(f"Diagnosis: {highest_prob_label} with a percentage of {round(predictions[0][highest_prob_label_index] * 100, 2)}%")
+                st.write(f"Diagnosis: {highest_prob_label} with a probability percentage of {round(predictions[0][highest_prob_label_index] * 100, 2)}%")
 
 
 if __name__ == "__main__":
