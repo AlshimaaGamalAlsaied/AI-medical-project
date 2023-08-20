@@ -176,7 +176,7 @@ def main():
 
                 # Display the output image and text
                 st.image(masked_img, caption='Grad-CAM Heatmap', use_column_width=True)
-                st.write(f"Diagnosis: {highest_prob_label} with a probability percentage of {round(predictions[0][highest_prob_label_index] * 100, 2)}%")
+                st.write(f"Diagnosis: {highest_prob_label} with a probability of {round(predictions[0][highest_prob_label_index] * 100, 2)}%")
 
 
 if __name__ == "__main__":
